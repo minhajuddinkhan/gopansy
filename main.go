@@ -7,16 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mattes/migrate"
-
-	"github.com/mattes/migrate/database/postgres"
-
 	"database/sql"
 
+	"github.com/DavidHuie/gomigrate"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	_ "github.com/mattes/migrate/database/postgres"
-	_ "github.com/mattes/migrate/source/github"
 	"github.com/urfave/negroni"
 )
 
@@ -32,22 +27,37 @@ var (
 )
 
 func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	connStr := "user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
+	connStr := "host=db user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	var str = "INSERT INTO test (id, name) VALUES ('one', 'two')"
+	_, err = db.Exec(str)
+	if err != nil {
+		log.Fatal("CANNOT INSERT.", err)
+	}
 	ctx := context.WithValue(r.Context(), contextKeyAuthtoken, db)
 	r = r.WithContext(ctx)
 	next.ServeHTTP(rw, r)
+
 }
 
 func main() {
 
-	connStr := "user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
+	connStr := " host=db user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
-	driver, err := postgres.WithInstance(db)
-	m, err := migrate.NewWithDatabaseInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
+	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
+	err = migrator.Migrate()
+
+	if err != nil {
+		fmt.Println("migrator error")
+		log.Fatal(err)
+	}
+	defer db.Close()
 
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", sayHello)
