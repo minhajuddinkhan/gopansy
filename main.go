@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -12,32 +11,20 @@ import (
 	"github.com/DavidHuie/gomigrate"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	constants "github.com/minhajuddinkhan/gopansy/constants"
+	routes "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/urfave/negroni"
 )
 
-type contextKey string
-
-func (c contextKey) String() string {
-	return "mypackage context key " + string(c)
-}
-
-var (
-	contextKeyAuthtoken = contextKey("auth-token")
-	contextKeyAnother   = contextKey("another")
-)
-
 func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	connStr := "host=db user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+
+	db, err := sql.Open("postgres", ConfDev.ConnectionString)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	var str = "INSERT INTO test (id, name) VALUES ('one', 'two')"
-	_, err = db.Exec(str)
-	if err != nil {
-		log.Fatal("CANNOT INSERT.", err)
-	}
-	ctx := context.WithValue(r.Context(), contextKeyAuthtoken, db)
+	defer db.Close()
+	ctx := context.WithValue(r.Context(), constants.DbKey, db)
 	r = r.WithContext(ctx)
 	next.ServeHTTP(rw, r)
 
@@ -45,8 +32,7 @@ func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.Ha
 
 func main() {
 
-	connStr := " host=db user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open(constants.DbType, ConfDev.ConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,29 +40,23 @@ func main() {
 	err = migrator.Migrate()
 
 	if err != nil {
-		fmt.Println("migrator error")
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	mux := mux.NewRouter()
-	mux.HandleFunc("/", sayHello)
+	mux.HandleFunc("/", routes.SayHello)
+
 	n := negroni.Classic()
 	n.UseFunc(negroLoggerMiddleware)
 	n.UseHandler(mux)
 
 	svr := http.Server{
-		Addr:         "0.0.0.0:8080",
+		Addr:         ConfDev.Addr,
 		Handler:      n,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 	svr.ListenAndServe()
 
-}
-
-func sayHello(w http.ResponseWriter, r *http.Request) {
-	postgres := r.Context().Value(contextKeyAuthtoken)
-	fmt.Println(postgres)
-	fmt.Fprintf(w, "Hello World!")
 }
