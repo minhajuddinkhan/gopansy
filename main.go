@@ -11,19 +11,24 @@ import (
 	"github.com/DavidHuie/gomigrate"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 	routes "github.com/minhajuddinkhan/gopansy/router"
+	"github.com/tkanos/gonfig"
 	"github.com/urfave/negroni"
 )
 
+var configuration conf.Configuration
+
 func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
-	db, err := sql.Open("postgres", ConfDev.ConnectionString)
+	db, err := sql.Open("postgres", configuration.ConnectionString)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
 	ctx := context.WithValue(r.Context(), constants.DbKey, db)
 	r = r.WithContext(ctx)
 	next.ServeHTTP(rw, r)
@@ -32,7 +37,9 @@ func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.Ha
 
 func main() {
 
-	db, err := sql.Open(constants.DbType, ConfDev.ConnectionString)
+	err := gonfig.GetConf("./config/dev.json", &configuration)
+
+	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +59,7 @@ func main() {
 	n.UseHandler(mux)
 
 	svr := http.Server{
-		Addr:         ConfDev.Addr,
+		Addr:         configuration.Addr,
 		Handler:      n,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
