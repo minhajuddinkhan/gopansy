@@ -9,12 +9,11 @@ import (
 	"database/sql"
 
 	"github.com/DavidHuie/gomigrate"
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
-	routes "github.com/minhajuddinkhan/gopansy/router"
+	router "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
 	"github.com/urfave/negroni"
 )
@@ -38,12 +37,9 @@ func main() {
 
 	defer db.Close()
 
-	mux := mux.NewRouter()
-	mux.HandleFunc("/", routes.SayHello)
-
 	n := negroni.Classic()
 	n.UseFunc(middlewares.SetDbCtx)
-	n.UseHandler(mux)
+	n.UseHandler(router.Initiate())
 
 	svr := http.Server{
 		Addr:         configuration.Addr,
