@@ -55,7 +55,7 @@ func main() {
 
 }
 
-func handleBootstrapError(err) {
+func handleBootstrapError(err error) {
 	if err != nil {
 		log.Fatal("SOMETHING WENT WRONG.", err)
 	}
