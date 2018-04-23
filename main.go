@@ -6,8 +6,12 @@ import (
 	"os"
 	"time"
 
+	"database/sql"
+
+	"github.com/DavidHuie/gomigrate"
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
+	constants "github.com/minhajuddinkhan/gopansy/constants"
 	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
 	router "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
@@ -15,13 +19,23 @@ import (
 )
 
 var configuration conf.Configuration
+var envPath string
 
 func main() {
 
-	err := gonfig.GetConf("./config/"+GetEnvPath(), &configuration)
+	err := gonfig.GetConf("./config/"+GetEnv(), &configuration)
 	handleBootstrapError(err)
 
 	conf.SetConfig(configuration)
+
+	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
+	handleBootstrapError(err)
+
+	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
+	err = migrator.Migrate()
+	handleBootstrapError(err)
+
+	defer db.Close()
 
 	n := negroni.Classic()
 	n.UseFunc(middlewares.SetDbCtx)
@@ -43,8 +57,7 @@ func handleBootstrapError(err error) {
 	}
 }
 
-//GetEnvPath GetEnvPath
-func GetEnvPath() string {
+func GetEnv() string {
 	env := os.Getenv("ENV")
 	if len(env) == 0 {
 		env = "dev"

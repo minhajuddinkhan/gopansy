@@ -11,7 +11,7 @@ services:
   app:
     build: .
     command: >
-      bash -c "go run db/migrate.go && go run main.go"
+      bash -c "go run main.go"
 
     volumes:
       - .:/go/src/app
