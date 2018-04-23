@@ -6,3 +6,12 @@ type Configuration struct {
 	ConnectionString string
 	Addr             string
 }
+
+//GetEnvs get environments
+func GetEnvs() map[string]string {
+
+	envs := make(map[string]string)
+	envs["dev"] = "dev.json"
+	return envs
+
+}

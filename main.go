@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"database/sql"
@@ -19,6 +21,7 @@ import (
 )
 
 var configuration conf.Configuration
+var envPath string
 
 func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
@@ -37,7 +40,14 @@ func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.Ha
 
 func main() {
 
-	err := gonfig.GetConf("./config/dev.json", &configuration)
+	env := os.Getenv("ENV")
+	if len(env) == 0 {
+		env = "dev"
+	}
+	environments := conf.GetEnvs()
+	envPath = environments[env]
+	fmt.Println(envPath)
+	err := gonfig.GetConf("./config/"+env, &configuration)
 
 	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
 	if err != nil {
