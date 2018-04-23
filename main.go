@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
+	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
 	routes "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
 	"github.com/urfave/negroni"
@@ -22,24 +22,11 @@ import (
 var configuration conf.Configuration
 var envPath string
 
-func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-
-	db, err := sql.Open("postgres", configuration.ConnectionString)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	ctx := context.WithValue(r.Context(), constants.DbKey, db)
-	r = r.WithContext(ctx)
-	next.ServeHTTP(rw, r)
-
-}
-
 func main() {
 
-	err := gonfig.GetConf("./config/"+getServerConf, &configuration)
+	err := gonfig.GetConf("./config/"+GetEnv(), &configuration)
+
+	conf.SetConfig(configuration)
 	handleBootstrapError(err)
 
 	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
@@ -55,7 +42,7 @@ func main() {
 	mux.HandleFunc("/", routes.SayHello)
 
 	n := negroni.Classic()
-	n.UseFunc(negroLoggerMiddleware)
+	n.UseFunc(middlewares.SetDbCtx)
 	n.UseHandler(mux)
 
 	svr := http.Server{
@@ -74,12 +61,11 @@ func handleBootstrapError(err) {
 	}
 }
 
-func getServerConf() string {
+func GetEnv() string {
 	env := os.Getenv("ENV")
 	if len(env) == 0 {
 		env = "dev"
 	}
-	environments := conf.GetEnvs()
-	return environments[env]
+	return conf.GetEnvPath(env)
 
 }
