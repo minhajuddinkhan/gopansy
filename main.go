@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -40,25 +39,16 @@ func negroLoggerMiddleware(rw http.ResponseWriter, r *http.Request, next http.Ha
 
 func main() {
 
-	env := os.Getenv("ENV")
-	if len(env) == 0 {
-		env = "dev"
-	}
-	environments := conf.GetEnvs()
-	envPath = environments[env]
-	fmt.Println(envPath)
-	err := gonfig.GetConf("./config/"+env, &configuration)
+	err := gonfig.GetConf("./config/"+getServerConf, &configuration)
+	handleBootstrapError(err)
 
 	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleBootstrapError(err)
+
 	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
 	err = migrator.Migrate()
+	handleBootstrapError(err)
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer db.Close()
 
 	mux := mux.NewRouter()
@@ -75,5 +65,21 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 	svr.ListenAndServe()
+
+}
+
+func handleBootstrapError(err) {
+	if err != nil {
+		log.Fatal("SOMETHING WENT WRONG.", err)
+	}
+}
+
+func getServerConf() string {
+	env := os.Getenv("ENV")
+	if len(env) == 0 {
+		env = "dev"
+	}
+	environments := conf.GetEnvs()
+	return environments[env]
 
 }
