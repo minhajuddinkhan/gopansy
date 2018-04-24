@@ -16,8 +16,7 @@ func ParseJwt(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	token, err := signer.SignedString(constants.JwtSecret)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error while signing the token")
+		fmt.Println("ERROR", err)
 	}
 	ctx := context.WithValue(r.Context(), constants.Authorization, token)
 	r = r.WithContext(ctx)
