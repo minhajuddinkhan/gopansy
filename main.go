@@ -32,7 +32,12 @@ func main() {
 
 func bootstrapConfig() {
 
-	err := gonfig.GetConf("./config/"+GetEnv(), &configuration)
+	env := os.Getenv("ENV")
+	if len(env) == 0 {
+		env = "dev"
+	}
+	path := conf.GetEnvPath(env)
+	err := gonfig.GetConf("./config/"+path, &configuration)
 	handleBootstrapError(err)
 	conf.SetConfig(configuration)
 
@@ -63,14 +68,6 @@ func bootstrapRouter() *negroni.Negroni {
 func handleBootstrapError(err error) {
 	if err != nil {
 		log.Fatal("SOMETHING WENT WRONG.", err)
+		panic(err)
 	}
-}
-
-func GetEnv() string {
-	env := os.Getenv("ENV")
-	if len(env) == 0 {
-		env = "dev"
-	}
-	return conf.GetEnvPath(env)
-
 }
