@@ -22,7 +22,6 @@ var configuration conf.Configuration
 var envPath string
 
 func main() {
-
 	err := gonfig.GetConf("./config/"+GetEnv(), &configuration)
 	handleBootstrapError(err)
 
@@ -38,6 +37,7 @@ func main() {
 	defer db.Close()
 
 	n := negroni.Classic()
+	n.UseFunc(middlewares.ParseJwt)
 	n.UseFunc(middlewares.SetDbCtx)
 	n.UseHandler(router.Initiate())
 

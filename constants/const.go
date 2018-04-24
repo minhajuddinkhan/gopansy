@@ -7,4 +7,10 @@ const (
 	DbKey key = iota
 	//DbType type of database
 	DbType string = "postgres"
+
+	//JwtSecret JwtSecret
+	JwtSecret string = "tryingtobeagopher"
+
+	//Authorization Authorization
+	Authorization string = "auth"
 )
