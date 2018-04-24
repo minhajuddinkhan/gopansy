@@ -7,20 +7,18 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 )
 
-//ParseJwt ParseJwt
-func ParseJwt(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+//EncodeJWT EncodeJWT
+func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"foo": "bar",
-		"nbf": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
-		// "role": "admin",
-		// "exp":  time.Now().Add(time.Minute * 20).Unix(),
+		"role": "admin",
+		"exp":  time.Now().Add(time.Minute * 20).Unix(),
 	})
-
-	token, err := signer.SignedString("123")
+	token, err := signer.SignedString([]byte(conf.GetConfig().Jwt.Secret))
 	if err != nil {
 		fmt.Println("ERROR", err)
 	}

@@ -5,6 +5,9 @@ type Configuration struct {
 	Port             string
 	ConnectionString string
 	Addr             string
+	Jwt              struct {
+		Secret string
+	}
 }
 
 var (
