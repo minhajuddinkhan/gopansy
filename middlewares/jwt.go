@@ -9,8 +9,6 @@ import (
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 )
 
-const ()
-
 //ParseJwt ParseJwt
 func ParseJwt(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
@@ -23,6 +21,6 @@ func ParseJwt(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	}
 	ctx := context.WithValue(r.Context(), constants.Authorization, token)
 	r = r.WithContext(ctx)
-	next.ServeHTTP(rw, r)
+	next.ServeHTTP(w, r)
 
 }
