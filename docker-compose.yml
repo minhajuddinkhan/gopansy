@@ -8,16 +8,16 @@ services:
       POSTGRES_PASSWORD: s3cr3tp4ssw0rd
     ports:
       - 5432:5432
-  app:
-    build: .
-    command: >
-      bash -c "go run main.go"
+  # app:
+  #   build: .
+  #   command: >
+  #     bash -c "go run main.go"
 
-    volumes:
-      - .:/go/src/app
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    links:
-      - db
+  #   volumes:
+  #     - .:/go/src/app
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - db
+  #   links:
+  #     - db
