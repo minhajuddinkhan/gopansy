@@ -1,13 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/DavidHuie/gomigrate"
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
+	"github.com/minhajuddinkhan/gopansy/constants"
+
+	migrate "github.com/minhajuddinkhan/gopansy/db"
 	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
 	router "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
@@ -19,7 +24,9 @@ var configuration conf.Configuration
 func main() {
 
 	bootstrapConfig()
-	bootstrapMigrations()
+	migrate.Migrate()
+	migrate.SeederUp()
+
 	svr := http.Server{
 		Addr:         configuration.Addr,
 		Handler:      bootstrapRouter(),
@@ -44,14 +51,14 @@ func bootstrapConfig() {
 }
 
 func bootstrapMigrations() {
-	// db, err := sql.Open(constants.DbType, configuration.ConnectionString)
-	// handleBootstrapError(err)
+	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
+	handleBootstrapError(err)
 
-	// migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
-	// err = migrator.Migrate()
-	// handleBootstrapError(err)
+	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
+	err = migrator.Migrate()
+	handleBootstrapError(err)
 
-	// defer db.Close()
+	defer db.Close()
 
 }
 
