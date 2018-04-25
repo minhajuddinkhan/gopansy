@@ -14,6 +14,11 @@ import (
 //EncodeJWT EncodeJWT
 func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
+	if r.RequestURI == "/login" {
+		next.ServeHTTP(w, r)
+		return
+	}
+
 	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"role": "admin",
 		"exp":  time.Now().Add(time.Minute * 20).Unix(),
