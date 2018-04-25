@@ -2,10 +2,10 @@ package middlewares
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 
 	"github.com/minhajuddinkhan/gopansy/constants"
@@ -14,7 +14,7 @@ import (
 func SetDbCtx(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	configuration := conf.GetConfig()
-	db, err := sql.Open("postgres", configuration.ConnectionString)
+	db, err := sqlx.Open("postgres", configuration.ConnectionString)
 
 	if err != nil {
 		log.Fatal(err)

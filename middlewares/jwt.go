@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	conf "github.com/minhajuddinkhan/gopansy/config"
@@ -18,16 +17,23 @@ func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		next.ServeHTTP(w, r)
 		return
 	}
+	auth := r.Header.Get("Authorization")
+	fmt.Println("AUTHHHH", auth)
 
-	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"role": "admin",
-		"exp":  time.Now().Add(time.Minute * 20).Unix(),
+	decoded, err := jwt.Parse(auth, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+		return []byte(conf.GetConfig().Jwt.Secret), nil
 	})
-	token, err := signer.SignedString([]byte(conf.GetConfig().Jwt.Secret))
+
 	if err != nil {
-		fmt.Println("ERROR", err)
+		fmt.Fprintf(w, "Cannot decode token")
+		return
 	}
-	ctx := context.WithValue(r.Context(), constants.Authorization, token)
+
+	ctx := context.WithValue(r.Context(), constants.Authorization, decoded)
 	r = r.WithContext(ctx)
 	next.ServeHTTP(w, r)
 

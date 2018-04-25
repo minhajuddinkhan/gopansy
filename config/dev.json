@@ -1,8 +1,9 @@
 {
     "Port":             "8080",
-    "ConnectionString": "host=localhost user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable",
+    "ConnectionString": "host=localhost user=admin dbname=pancy password=3xCtG8z sslmode=disable",
     "Addr":             "0.0.0.0:8080",
     "Jwt": {
         "Secret": "IdontLoveGolang"
-    }
+    },
+    "DockerConnectionStr": "host=localhost user=pansy-user dbname=pansy-go password=s3cr3tp4ssw0rd sslmode=disable"    
 }

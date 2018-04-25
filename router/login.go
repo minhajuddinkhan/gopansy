@@ -1,15 +1,17 @@
 package router
 
 import (
-	dbsql "database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
-	_ "github.com/lib/pq"
-
+	jwt "github.com/dgrijalva/jwt-go"
+	dbsql "github.com/jmoiron/sqlx"
+	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 	"github.com/minhajuddinkhan/gopansy/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //Login Login
@@ -19,30 +21,48 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-	var User models.User
+
+	Users := []models.User{}
+
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&loginPayload)
 	if err != nil {
 		fmt.Println("Cannot decode")
 	}
-	fmt.Println("username", loginPayload.Username)
-	db := r.Context().Value(constants.DbKey).(*dbsql.DB)
-	result := db.QueryRow("SELECT username FROM users WHERE username = $1", loginPayload.Username)
-	if err != nil {
-		fmt.Println("Can't Scan Rows", err)
-	}
 
-	err = result.Scan(&User.Username)
+	const rounds int = 10
+	db := r.Context().Value(constants.DbKey).(*dbsql.DB)
+	err = db.Select(&Users, "SELECT * FROM users  WHERE username = $1", loginPayload.Username)
 	if err != nil {
 		fmt.Println("cant scan", err)
 	}
-	fmt.Println("user!!!", User.Username)
-
 	defer r.Body.Close()
+
+	user := Users[0]
+
+	h := []byte(user.HashedPassword.String)
+	p := []byte(loginPayload.Password)
+	err = bcrypt.CompareHashAndPassword(h, p)
+	if err != nil {
+		fmt.Println("not equal bro", err)
+	}
+
+	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"role": "admin",
+		"exp":  time.Now().Add(time.Minute * 20).Unix(),
+	})
+	token, err := signer.SignedString([]byte(conf.GetConfig().Jwt.Secret))
+	if err != nil {
+		fmt.Println("ERROR", err)
+	}
 
 	w.Header().Set("content-type", "application/json")
 	encoder := json.NewEncoder(w)
-	err = encoder.Encode(loginPayload)
+	err = encoder.Encode(struct {
+		Authroziation string `json:"Authorization"`
+	}{
+		token,
+	})
 	if err != nil {
 		fmt.Println("Cannot encode")
 	}
