@@ -26,9 +26,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-
-	user := models.User{}
-
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&loginPayload)
 	if err != nil {
@@ -45,7 +42,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		boom.BadRequest(w, err.Error())
 		return
 	}
-	const rounds int = 10
 	db := r.Context().Value(constants.DbKey).(*dbsql.DB)
 
 	row := db.QueryRowx(`select u.*, r.name as rolename  
@@ -53,6 +49,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		where u.username = $1`, loginPayload.Username)
 	defer r.Body.Close()
 
+	user := models.User{}
 	row.StructScan(&user)
 
 	if len(user.ID.String) == 0 {
