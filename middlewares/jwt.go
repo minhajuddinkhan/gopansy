@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/darahayes/go-boom"
 	jwt "github.com/dgrijalva/jwt-go"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
@@ -18,7 +19,10 @@ func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		return
 	}
 	auth := r.Header.Get("Authorization")
-	fmt.Println("AUTHHHH", auth)
+	if len(auth) == 0 {
+		boom.Unathorized(w, "Authorization Header not found")
+		return
+	}
 
 	decoded, err := jwt.Parse(auth, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -29,8 +33,7 @@ func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	})
 
 	if err != nil {
-		fmt.Fprintf(w, "Cannot decode token")
-		return
+		boom.Unathorized(w, "Invalid Authorization Token")
 	}
 
 	ctx := context.WithValue(r.Context(), constants.Authorization, decoded)

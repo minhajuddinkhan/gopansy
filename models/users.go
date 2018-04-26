@@ -13,7 +13,7 @@ type User struct {
 	RoleID           int            `json:"roleId"`
 	PermitOneAllowed bool           `json:"permitOneAllowed"`
 	PermitTwoAllowed bool           `json:"permitTwoAllowed"`
-	Role             Role           `json:"role"`
+	RoleName         string         `json:"rolename"`
 }
 
 //Role Role
