@@ -2,8 +2,9 @@ package middlewares
 
 import (
 	"context"
-	"log"
 	"net/http"
+
+	"github.com/darahayes/go-boom"
 
 	"github.com/jmoiron/sqlx"
 	conf "github.com/minhajuddinkhan/gopansy/config"
@@ -17,7 +18,8 @@ func SetDbCtx(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	db, err := sqlx.Open("postgres", configuration.ConnectionString)
 
 	if err != nil {
-		log.Fatal(err)
+		boom.Internal(rw)
+		return
 	}
 	defer db.Close()
 
