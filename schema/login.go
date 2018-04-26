@@ -1,4 +1,4 @@
-package validators
+package schema
 
 //Login Login
 type Login struct {

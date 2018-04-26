@@ -31,9 +31,9 @@ func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return []byte(conf.GetConfig().Jwt.Secret), nil
 	})
-
 	if err != nil {
 		boom.Unathorized(w, "Invalid Authorization Token")
+		return
 	}
 
 	ctx := context.WithValue(r.Context(), constants.Authorization, decoded)

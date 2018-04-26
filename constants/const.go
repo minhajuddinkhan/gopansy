@@ -13,4 +13,7 @@ const (
 
 	//Authorization Authorization
 	Authorization string = "auth"
+
+	//HashRounds HashRounds
+	HashRounds int = 10
 )

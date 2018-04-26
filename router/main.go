@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/darahayes/go-boom"
 	"github.com/gorilla/mux"
 )
 
@@ -10,7 +9,11 @@ func Initiate() *mux.Router {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", SayHello)
 	mux.HandleFunc("/login", Login).Methods("POST")
-	mux.Use(boom.RecoverHandler)
+
+	mux.HandleFunc("/user/{id}", GetUserById).Methods("GET")
+	mux.HandleFunc("/user", GetUsers).Methods("GET")
+	mux.HandleFunc("/user", CreateUser).Methods("POST")
+
 	return mux
 
 }

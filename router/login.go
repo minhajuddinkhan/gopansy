@@ -52,11 +52,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	row.StructScan(&user)
 
-	if len(user.ID.String) == 0 {
+	if len(*user.ID) == 0 {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword.String), []byte(loginPayload.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(*user.HashedPassword), []byte(loginPayload.Password))
 	if err != nil {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
