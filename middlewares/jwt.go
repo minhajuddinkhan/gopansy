@@ -11,8 +11,8 @@ import (
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 )
 
-//EncodeJWT EncodeJWT
-func EncodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+//DecodeJWT DecodeJWT
+func DecodeJWT(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	if r.RequestURI == "/login" {
 		next.ServeHTTP(w, r)

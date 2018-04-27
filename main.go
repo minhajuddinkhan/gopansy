@@ -1,18 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/DavidHuie/gomigrate"
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
-	"github.com/minhajuddinkhan/gopansy/constants"
 
-	migrate "github.com/minhajuddinkhan/gopansy/db"
+	db "github.com/minhajuddinkhan/gopansy/db"
 	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
 	router "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
@@ -24,8 +21,8 @@ var configuration conf.Configuration
 func main() {
 
 	bootstrapConfig()
-	migrate.Migrate()
-	migrate.SeederUp()
+	db.Migrate()
+	db.SeederUp()
 
 	svr := http.Server{
 		Addr:         configuration.Addr,
@@ -50,22 +47,10 @@ func bootstrapConfig() {
 
 }
 
-func bootstrapMigrations() {
-	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
-	handleBootstrapError(err)
-
-	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, "./db/migrations")
-	err = migrator.Migrate()
-	handleBootstrapError(err)
-
-	defer db.Close()
-
-}
-
 func bootstrapRouter() *negroni.Negroni {
 
 	n := negroni.Classic()
-	n.UseFunc(middlewares.EncodeJWT)
+	n.UseFunc(middlewares.DecodeJWT)
 	n.UseFunc(middlewares.SetDbCtx)
 	n.UseHandler(router.Initiate())
 	return n
