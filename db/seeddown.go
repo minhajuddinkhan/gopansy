@@ -4,15 +4,13 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/DavidHuie/gomigrate"
-	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	"github.com/minhajuddinkhan/gopansy/constants"
 	"github.com/tkanos/gonfig"
 )
 
-//Migrate Migrate
-func Migrate() {
+//SeederDown SeederDown
+func SeederDown() {
 
 	var configuration conf.Configuration
 	env := os.Getenv("ENV")
@@ -21,15 +19,19 @@ func Migrate() {
 	}
 
 	path := "../../config/" + conf.GetEnvPath(env)
-	migrationPath := "../../db/migrations"
 
 	err := gonfig.GetConf(path, &configuration)
-	HandleBootstrapError(err)
-	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
-	HandleBootstrapError(err)
+	handleBootstrapError(err)
 
-	migrator, _ := gomigrate.NewMigrator(db, gomigrate.Postgres{}, migrationPath)
-	err = migrator.Migrate()
-	HandleBootstrapError(err)
+	db, err := sql.Open(constants.DbType, configuration.ConnectionString)
+	handleBootstrapError(err)
+
+	defer db.Close()
+
+	_, err = db.Exec("DELETE from users where id = 1")
+	handleBootstrapError(err)
+
+	_, err = db.Exec("DELETE from roles where id = 1")
+	handleBootstrapError(err)
 
 }

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -9,7 +9,6 @@ import (
 	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 
-	db "github.com/minhajuddinkhan/gopansy/db"
 	middlewares "github.com/minhajuddinkhan/gopansy/middlewares"
 	router "github.com/minhajuddinkhan/gopansy/router"
 	"github.com/tkanos/gonfig"
@@ -18,11 +17,10 @@ import (
 
 var configuration conf.Configuration
 
-func main() {
+//Serve Serve
+func Serve() {
 
 	bootstrapConfig()
-	db.Migrate()
-	db.SeederUp()
 
 	svr := http.Server{
 		Addr:         configuration.Addr,
