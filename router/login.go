@@ -52,7 +52,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	row.StructScan(&user)
 
-	if len(*user.ID) == 0 {
+	if user.ID == nil {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
 	}
