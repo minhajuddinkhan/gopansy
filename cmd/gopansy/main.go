@@ -57,8 +57,9 @@ func main() {
 		var s server.Server
 		upConfig(&configuration)
 
-		arg := c.Args().First()
+		upConfig(&configuration)
 		dbPath := "../../db/migrations"
+		arg := c.Args().First()
 
 		switch arg {
 
@@ -94,7 +95,6 @@ func main() {
 			return nil
 
 		default:
-			upConfig(&configuration)
 			s = server.Server{
 				Conf:   configuration,
 				Router: upRouter(),
