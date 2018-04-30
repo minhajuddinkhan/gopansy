@@ -1,6 +1,7 @@
 package router
 
 import (
+	_ "database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	dbsql "github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 	helpers "github.com/minhajuddinkhan/gopansy/helpers"
@@ -47,9 +49,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	row := db.QueryRowx(`select u.*, r.name as rolename  
 		from users u join roles r on (r.id = u.roleid)  
 		where u.username = $1`, loginPayload.Username)
-	defer r.Body.Close()
 
-	user := models.User{}
+	var user models.User
+
 	row.StructScan(&user)
 
 	if user.ID == nil {

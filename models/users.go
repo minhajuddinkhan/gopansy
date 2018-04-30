@@ -2,14 +2,14 @@ package models
 
 //User User
 type User struct {
-	ID               *string `json:"user_id,omitempty"`
+	ID               *string `json:"id,omitempty"`
 	Username         *string `json:"username"`
 	Email            *string `json:"email"`
-	HashedPassword   *string `json:"hashed_password"`
-	RoleID           *int    `json:"role_id, omitempty"`
-	PermitOneAllowed *bool   `json:"permit_one_allowed"`
-	PermitTwoAllowed *bool   `json:"permit_two_allowed"`
-	RoleName         *string `json:"role_name,omitempty"`
+	HashedPassword   *string `json:"hashedPassword"`
+	RoleID           *int    `json:"roleId, omitempty"`
+	PermitOneAllowed *bool   `json:"permitOneAllowed"`
+	PermitTwoAllowed *bool   `json:"permitTwoAllowed"`
+	RoleName         *string `json:"roleName,omitempty"`
 }
 
 //UserCreateRequest UserCreateRequest

@@ -27,6 +27,7 @@ func (s *Seeder) Seed() error {
 		return err
 	}
 
+	//hash -> importpansy
 	_, err = db.Exec(`INSERT INTO users
 			(username, hashedPassword, roleId, permitOneAllowed, permitTwoAllowed)
 			 SELECT 'pancyAdmin', '$2a$05$ZW7dtscHYyl0B7OUlHJ4oOfsJsVt1adavPbpvXi5OjydxM4Tc3QFW', 1, true, true 
