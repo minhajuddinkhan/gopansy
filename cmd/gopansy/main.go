@@ -56,15 +56,11 @@ func main() {
 		var configuration conf.Configuration
 		var s server.Server
 		upConfig(&configuration)
-
-		upConfig(&configuration)
 		dbPath := "../../db/migrations"
-		arg := c.Args().First()
 
-		switch arg {
+		switch c.Args().First() {
 
 		case migrate:
-
 			migrator := db.Migrator{
 				Conf: configuration,
 			}
@@ -72,36 +68,30 @@ func main() {
 			return nil
 
 		case seedup:
-
 			seeder := db.Seeder{
 				Conf: configuration,
 			}
 			return seeder.Seed()
 
 		case seeddown:
-
 			seeder := db.Seeder{
 				Conf: configuration,
 			}
 			return seeder.Seed()
 
 		case serve:
-
 			s = server.Server{
 				Conf:   configuration,
 				Router: upRouter(),
 			}
-			s.Start()
-			return nil
+			return s.Start()
 
 		default:
 			s = server.Server{
 				Conf:   configuration,
 				Router: upRouter(),
 			}
-			s.Start()
-			return nil
-
+			return s.Start()
 		}
 	}
 
