@@ -22,19 +22,29 @@ import (
 
 //GetUsers GetUsers
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	users := []models.User{}
 	db := r.Context().Value(constants.DbKey).(*sql.DB)
-	rows, err := db.Queryx("SELECT * FROM USERS")
+
+	type UserRole struct {
+		models.User
+		models.Role
+	}
+	userWithRoles := []UserRole{}
+	rows, err := db.Queryx("SELECT * FROM users u JOIN roles r on (u.roleId = r.id)")
 	if err != nil {
 		boom.Internal(w)
 		return
 	}
 	for rows.Next() {
-		var u models.User
-		rows.StructScan(&u)
-		users = append(users, u)
+		var r UserRole
+		err := rows.StructScan(&r)
+		if err != nil {
+			boom.Internal(w)
+			return
+		}
+		userWithRoles = append(userWithRoles, r)
 	}
-	helpers.Respond(w, users)
+
+	helpers.Respond(w, userWithRoles)
 }
 
 func GetUserById(w http.ResponseWriter, r *http.Request) {
@@ -44,12 +54,16 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 		boom.BadRequest(w, "User Id Required")
 	}
 	db := r.Context().Value(constants.DbKey).(*sql.DB)
-	row := db.QueryRowx("SELECT u.* from users u WHERE u.id = $1", userID)
-	fmt.Println("row", row)
-	user := models.User{}
+	type UserRole struct {
+		models.User
+		models.Role
+	}
+
+	row := db.QueryRowx("SELECT * from users u JOIN roles r on (u.roleId = r.id) WHERE u.id = $1", userID)
+	user := UserRole{}
 	row.StructScan(&user)
 
-	if len(*user.ID) == 0 {
+	if len(*user.Username) == 0 {
 		boom.NotFound(w, "User not found")
 		return
 	}

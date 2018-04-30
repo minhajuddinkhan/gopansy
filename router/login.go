@@ -46,15 +46,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	db := r.Context().Value(constants.DbKey).(*dbsql.DB)
 
-	row := db.QueryRowx(`select u.*, r.name as rolename  
-		from users u join roles r on (r.id = u.roleid)  
+	type UserRole struct {
+		models.User
+		models.Role
+	}
+
+	usersWithRole := []UserRole{}
+	rows, err := db.Queryx(`select *  
+		from users u join roles r on (r.id = u.roleId)  
 		where u.username = $1`, loginPayload.Username)
 
-	var user models.User
+	for rows.Next() {
+		var userWithRole UserRole
+		err := rows.StructScan(&userWithRole)
+		if err != nil {
+			boom.Internal(w)
+			return
+		}
+		usersWithRole = append(usersWithRole, userWithRole)
+	}
 
-	row.StructScan(&user)
-
-	if user.ID == nil {
+	user := usersWithRole[0]
+	if user.Username == nil {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
 	}
@@ -65,8 +78,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"role": user.RoleName,
-		"exp":  time.Now().Add(time.Minute * 20).Unix(),
+		"exp": time.Now().Add(time.Minute * 20).Unix(),
 	})
 	token, err := signer.SignedString([]byte(conf.GetConfig().Jwt.Secret))
 	if err != nil {

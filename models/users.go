@@ -9,7 +9,7 @@ type User struct {
 	RoleID           *int    `json:"roleId, omitempty"`
 	PermitOneAllowed *bool   `json:"permitOneAllowed"`
 	PermitTwoAllowed *bool   `json:"permitTwoAllowed"`
-	RoleName         *string `json:"roleName,omitempty"`
+	Name             *string `json:"roleName,omitempty"`
 }
 
 //UserCreateRequest UserCreateRequest
@@ -24,6 +24,6 @@ type UserCreateRequest struct {
 
 //Role Role
 type Role struct {
-	ID   *string `json:"role_id"`
-	Name *string `json:"role_name"`
+	ID   *string `json:"id"`
+	Name *string `json:"name"`
 }
