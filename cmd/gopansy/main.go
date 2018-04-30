@@ -64,8 +64,7 @@ func main() {
 			migrator := db.Migrator{
 				Conf: configuration,
 			}
-			migrator.Migrate(dbPath)
-			return nil
+			return migrator.Migrate(dbPath)
 
 		case seedup:
 			seeder := db.Seeder{
@@ -77,7 +76,7 @@ func main() {
 			seeder := db.Seeder{
 				Conf: configuration,
 			}
-			return seeder.Seed()
+			return seeder.UnSeed()
 
 		case serve:
 			s = server.Server{
