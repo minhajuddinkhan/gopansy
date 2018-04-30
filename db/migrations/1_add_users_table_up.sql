@@ -4,7 +4,7 @@ CREATE TABLE users (
     email text,
     permitOneAllowed boolean,
     permitTwoAllowed boolean,
-    hashedPassword boolean,
+    hashedPassword text,
     roleId integer,
     PRIMARY KEY (id)
 );

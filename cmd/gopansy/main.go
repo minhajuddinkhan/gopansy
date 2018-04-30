@@ -57,6 +57,7 @@ func main() {
 		var s server.Server
 		upConfig(&configuration)
 		dbPath := "./db/migrations"
+		conf.SetConfig(configuration)
 
 		switch c.Args().First() {
 
