@@ -38,7 +38,7 @@ func upConfig(c *conf.Configuration) {
 		env = "dev"
 	}
 	path := conf.GetEnvPath(env)
-	err := gonfig.GetConf("../../config/"+path, c)
+	err := gonfig.GetConf("./config/"+path, c)
 
 	if err != nil {
 		helpers.HandleBootstrapError(err)
@@ -56,7 +56,7 @@ func main() {
 		var configuration conf.Configuration
 		var s server.Server
 		upConfig(&configuration)
-		dbPath := "../../db/migrations"
+		dbPath := "./db/migrations"
 
 		switch c.Args().First() {
 

@@ -12,13 +12,14 @@ type User struct {
 	RoleName         *string `json:"rolename,omitempty"`
 }
 
+//UserCreateRequest UserCreateRequest
 type UserCreateRequest struct {
-	Username         *string `json:"username"`
-	Email            *string `json:"email"`
-	Password         *string `json:"password"`
-	RoleID           *int    `json:"roleId, omitempty"`
-	PermitOneAllowed *bool   `json:"permitOneAllowed"`
-	PermitTwoAllowed *bool   `json:"permitTwoAllowed"`
+	Username         *string `json:"username" validate:"required"`
+	Email            *string `json:"email" validate:"required"`
+	Password         *string `json:"password" validate:"required"`
+	RoleID           *int    `json:"roleId, omitempty" validate:"required"`
+	PermitOneAllowed *bool   `json:"permitOneAllowed" validate:"required"`
+	PermitTwoAllowed *bool   `json:"permitTwoAllowed" validate:"required"`
 }
 
 //Role Role
