@@ -2,7 +2,6 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -29,7 +28,9 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		models.Role
 	}
 	userWithRoles := []UserRole{}
-	rows, err := db.Queryx("SELECT * FROM users u JOIN roles r on (u.roleId = r.id)")
+
+	u := models.User{}
+	rows, err := u.GetAllUserWithRoles(db)
 	if err != nil {
 		boom.Internal(w)
 		return
@@ -47,7 +48,8 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	helpers.Respond(w, userWithRoles)
 }
 
-func GetUserById(w http.ResponseWriter, r *http.Request) {
+//GetUserByID GetUserByID
+func GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 	userID := mux.Vars(r)["id"]
 	if len(userID) == 0 {
@@ -58,9 +60,9 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 		models.User
 		models.Role
 	}
-
-	row := db.QueryRowx("SELECT * from users u JOIN roles r on (u.roleId = r.id) WHERE u.id = $1", userID)
 	user := UserRole{}
+
+	row := user.GetUserByID(db, userID)
 	row.StructScan(&user)
 
 	if len(*user.Username) == 0 {
@@ -71,11 +73,12 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 	helpers.Respond(w, user)
 }
 
+//CreateUser CreateUser
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	//_ := r.Context().Value(constants.DbKey).(*sql.DB)
 	decoder := json.NewDecoder(r.Body)
-	user := models.UserCreateRequest{}
+	user := models.User{}
 	decoder.Decode(&user)
 
 	v := validator.New()
@@ -92,21 +95,23 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := models.User{}
-
 	db := r.Context().Value(constants.DbKey).(*sql.DB)
 	row := db.QueryRowx("SELECT u.* FROM users u WHERE u.username = $1 OR u.email = $2", user.Username, user.Email)
-	row.StructScan(&u)
-	fmt.Println("*u.ID", *u.ID)
-	if len(*u.ID) != 0 {
+	row.StructScan(&user)
+
+	if len(*user.ID) != 0 {
 		boom.Conflict(w, "User with this username/email already exists")
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(*user.Password), constants.HashRounds)
-	db.Exec(`INSERT into users 
-		(username, email, hashedPassword, permitOneAllowed, permitTwoAllowed, roleId) VALUES
-		($1, $2, $3, $4, $5, $6) RETURNING id`, user.Username, user.Email, hash, user.PermitOneAllowed, user.PermitTwoAllowed, user.RoleID)
+
+	var hashStr *string
+	c := string(hash)
+	hashStr = &c
+	user.HashedPassword = hashStr
+
+	_, err = user.CreateUser(db)
 
 	if err != nil {
 		boom.Internal(w)

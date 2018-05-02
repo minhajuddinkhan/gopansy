@@ -20,6 +20,7 @@ const (
 	seedup   = "seed-up"
 	seeddown = "seed-down"
 	serve    = "serve"
+	start    = "start"
 )
 
 func upRouter() *negroni.Negroni {
@@ -60,6 +61,28 @@ func main() {
 		conf.SetConfig(configuration)
 
 		switch c.Args().First() {
+
+		case start:
+			migrator := db.Migrator{
+				Conf: configuration,
+			}
+			err := migrator.Migrate(dbPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			seeder := db.Seeder{
+				Conf: configuration,
+			}
+			err = seeder.Seed()
+			if err != nil {
+				log.Fatal(err)
+			}
+			s = server.Server{
+				Conf:   configuration,
+				Router: upRouter(),
+			}
+			return s.Start()
 
 		case migrate:
 			migrator := db.Migrator{

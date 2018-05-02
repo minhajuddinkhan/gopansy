@@ -10,7 +10,7 @@ func Initiate() *mux.Router {
 	mux.HandleFunc("/", SayHello)
 	mux.HandleFunc("/login", Login).Methods("POST")
 
-	mux.HandleFunc("/user/{id}", GetUserById).Methods("GET")
+	mux.HandleFunc("/user/{id}", GetUserByID).Methods("GET")
 	mux.HandleFunc("/user", GetUsers).Methods("GET")
 	mux.HandleFunc("/user", CreateUser).Methods("POST")
 
