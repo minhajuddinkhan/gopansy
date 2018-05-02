@@ -6,7 +6,6 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/minhajuddinkhan/gopansy/schema"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/minhajuddinkhan/gopansy/helpers"
@@ -82,21 +81,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder.Decode(&user)
 
 	v := validator.New()
-	err := v.Struct(schema.User{
-		user.Username,
-		user.Email,
-		user.Password,
-		user.PermitOneAllowed,
-		user.PermitTwoAllowed,
-		user.RoleID,
-	})
+	err := v.Struct(user)
 	if err != nil {
 		boom.BadRequest(w, err.Error())
 		return
 	}
 
 	db := r.Context().Value(constants.DbKey).(*sql.DB)
-	row := db.QueryRowx("SELECT u.* FROM users u WHERE u.username = $1 OR u.email = $2", user.Username, user.Email)
+	row := user.GetByEmailOrUsername(db)
 	row.StructScan(&user)
 
 	if len(*user.ID) != 0 {

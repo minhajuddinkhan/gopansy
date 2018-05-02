@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	sqlx "github.com/jmoiron/sqlx"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 //User User
@@ -30,6 +31,17 @@ func (user *User) CreateUser(db *sqlx.DB) (sql.Result, error) {
 		user.PermitOneAllowed,
 		user.PermitTwoAllowed,
 		user.RoleID)
+
+}
+
+//Validate Validate
+func (user *User) Validate(v *validator.Validate) error {
+	return v.Struct(user)
+}
+
+//GetByEmailOrUsername GetByEmailOrUsername
+func (user *User) GetByEmailOrUsername(db *sqlx.DB) *sqlx.Row {
+	return db.QueryRowx("SELECT u.* FROM users u WHERE u.username = $1 OR u.email = $2", user.Username, user.Email)
 
 }
 
