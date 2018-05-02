@@ -19,6 +19,13 @@ type User struct {
 	PermitTwoAllowed *bool   `json:"permitTwoAllowed" validate:"required"`
 }
 
+//GetByUsername  GetByUsername
+func (user *User) GetByUsername(db *sqlx.DB) *sqlx.Row {
+	return db.QueryRowx(`select *  
+		from users u join roles r on (r.id = u.roleId)  
+		where u.username = $1`, user.Username)
+}
+
 //CreateUser CreateUser
 func (user *User) CreateUser(db *sqlx.DB) (sql.Result, error) {
 

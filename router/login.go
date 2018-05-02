@@ -24,22 +24,21 @@ import (
 //Login Login
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	var loginPayload struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+	var payload schema.Login
+
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&loginPayload)
+	err := decoder.Decode(&payload)
 	if err != nil {
 		boom.BadData(w, "Cannot decode Request Body")
 		return
 	}
 
+	login := schema.Login{
+		Username: payload.Username,
+		Password: payload.Password,
+	}
 	v := validator.New()
-	err = v.Struct(schema.Login{
-		loginPayload.Username,
-		loginPayload.Password,
-	})
+	err = login.Validate(v)
 	if err != nil {
 		boom.BadRequest(w, err.Error())
 		return
@@ -50,35 +49,31 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		models.User
 		models.Role
 	}
+	userWithRole := UserRole{}
 
-	usersWithRole := []UserRole{}
-	rows, err := db.Queryx(`select *  
-		from users u join roles r on (r.id = u.roleId)  
-		where u.username = $1`, loginPayload.Username)
-
-	for rows.Next() {
-		var userWithRole UserRole
-		err := rows.StructScan(&userWithRole)
-		if err != nil {
-			boom.Internal(w)
-			return
-		}
-		usersWithRole = append(usersWithRole, userWithRole)
+	user := models.User{
+		Username: &payload.Username,
+	}
+	row := user.GetByUsername(db)
+	err = row.StructScan(&userWithRole)
+	if err != nil {
+		boom.Internal(w)
+		return
 	}
 
-	user := usersWithRole[0]
-	if user.Username == nil {
+	if userWithRole.Username == nil {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(*user.HashedPassword), []byte(loginPayload.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(*userWithRole.HashedPassword), []byte(payload.Password))
 	if err != nil {
 		boom.Unathorized(w, "Invalid Username or Password")
 		return
 	}
 
 	signer := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(time.Minute * 20).Unix(),
+		"role": userWithRole.Name,
+		"exp":  time.Now().Add(time.Minute * 20).Unix(),
 	})
 	token, err := signer.SignedString([]byte(conf.GetConfig().Jwt.Secret))
 	if err != nil {
