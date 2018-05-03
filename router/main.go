@@ -14,6 +14,8 @@ func Initiate() *mux.Router {
 	mux.HandleFunc("/user", GetUsers).Methods("GET")
 	mux.HandleFunc("/user", CreateUser).Methods("POST")
 
+	mux.HandleFunc("/forms/permitone", CreatePermitOneForm).Methods("POST")
+
 	return mux
 
 }

@@ -1,7 +1,6 @@
 package router
 
 import (
-	_ "database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -12,7 +11,6 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	dbsql "github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	conf "github.com/minhajuddinkhan/gopansy/config"
 	constants "github.com/minhajuddinkhan/gopansy/constants"
 	helpers "github.com/minhajuddinkhan/gopansy/helpers"
