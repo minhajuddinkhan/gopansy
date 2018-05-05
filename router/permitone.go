@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/minhajuddinkhan/gopansy/helpers"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/minhajuddinkhan/gopansy/constants"
 
-	"github.com/darahayes/go-boom"
+	"github.com/imdario/mergo"
+
+	boom "github.com/darahayes/go-boom"
+	"github.com/minhajuddinkhan/gopansy/helpers"
 
 	_ "database/sql"
 
@@ -21,76 +22,75 @@ import (
 //CreatePermitOneForm CreatePermitOneForm
 func CreatePermitOneForm(w http.ResponseWriter, r *http.Request) {
 
-	payload := struct {
-		models.PermitOneForm
-		models.Applicant
-		models.Importer
-	}{}
+	applicantID := 0
+	importerID := 0
 
+	requestBody := models.PermitOneFormCreateRequest{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&payload)
-
-	var newApplicantID *string
-	var newImporterID *string
+	err := decoder.Decode(&requestBody)
 	if err != nil {
-		boom.BadRequest(w, "Invalid Request Body")
+		boom.BadRequest(w, "Unable to parse request body")
 		return
 	}
 
-	err = helpers.Validate(payload)
-	if err != nil {
-		boom.BadRequest(w, err)
-		return
+	applicant := models.Applicant{
+		ApplicantID:      requestBody.ApplicantID,
+		ApplicantAddress: requestBody.ApplicantAddress,
+		ApplicantCell:    requestBody.ApplicantAddress,
+		ApplicantName:    requestBody.ApplicantName,
+		ApplicantPhone:   requestBody.ApplicantPhone,
 	}
+
+	importer := models.Importer{
+		ImporterID:   requestBody.ImporterID,
+		ImporterName: requestBody.ImporterName,
+	}
+
+	applicantFound := models.Applicant{}
+	importerFound := models.Importer{}
 
 	db := r.Context().Value(constants.DbKey).(*sqlx.DB)
-
 	tx := db.MustBegin()
 
-	fmt.Println("payload.Applicant.ApplicantID", payload)
-	applicant := models.Applicant{}
-	row := applicant.FindByID(db, payload.Applicant.ApplicantID)
-	row.StructScan(&applicant)
+	row := applicant.FindByID(db, requestBody.ApplicantID)
+	row.StructScan(&applicantFound)
 
-	if applicant.ApplicantID == nil {
-		applicant = models.Applicant{
-			ApplicantName:    payload.Applicant.ApplicantName,
-			ApplicantAddress: payload.Applicant.ApplicantAddress,
-		}
-
-		row, err = applicant.CreateApplicantWithTransaction(tx)
+	if len(*applicantFound.ApplicantID) == 0 {
+		row, err := applicant.CreateApplicantWithTransaction(tx)
 		if err != nil {
-			boom.Internal(w, "Cannot Create Applicant")
+			boom.BadData(w)
 			return
 		}
-		row.StructScan(&newApplicantID)
+		row.StructScan(&applicantID)
 
-		payload.Applicant.ApplicantID = newApplicantID
-	} else {
-		payload.Applicant.ApplicantID = applicant.ApplicantID
 	}
 
-	importer := models.Importer{}
-	row = importer.FindByID(db, payload.Importer.ImporterID)
-	row.StructScan(&importer)
+	row = importer.FindByID(db, requestBody.ImporterID)
+	if err != nil {
+		boom.BadData(w)
+		return
+	}
 
-	if importer.ImporterID != nil {
-		importer = models.Importer{
-			ImporterName:    payload.Importer.ImporterName,
-			ImporterAddress: payload.Importer.ImporterAddress,
-		}
-		row, err = importer.CreateImporterWithTransaction(tx)
+	row.StructScan(&importerFound)
+	if len(*importerFound.ImporterID) == 0 {
+		row, err := importer.CreateImporterWithTransaction(tx)
 		if err != nil {
-			boom.Internal(w, "Cannot Create Importert")
+			boom.BadData(w)
 			return
 		}
-		row.StructScan(&newImporterID)
-		payload.Importer.ImporterID = newImporterID
-	} else {
-		payload.Importer.ImporterID = importer.ImporterID
+
+		row.Scan(&importerID)
+		fmt.Println("SCANNING STRUCT", importerID)
 	}
 
-	rows, err := payload.PermitOneForm.CreateWithTransaction(tx)
+	helpers.Respond(w, importerID)
+	return
+
+	permitOne := models.PermitOneForm{}
+
+	mergo.Map(&permitOne, requestBody)
+
+	rows, err := permitOne.CreateWithTransaction(tx)
 	if err != nil {
 		boom.Internal(w)
 		return

@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +18,7 @@ type Importer struct {
 }
 
 //CreateImporterWithTransaction CreateImporterWithTransaction
-func (i *Importer) CreateImporterWithTransaction(tx *sqlx.Tx) (*sqlx.Row, error) {
+func (i *Importer) CreateImporterWithTransaction(tx *sqlx.Tx) (*sql.Row, error) {
 
 	query := `INSERT INTO importers 
 			(
@@ -24,7 +26,7 @@ func (i *Importer) CreateImporterWithTransaction(tx *sqlx.Tx) (*sqlx.Row, error)
 			) VALUES
 			(
 				$1, $2, $3, $4, $5, $6
-			)`
+			) RETURNING importerId`
 
 	stmt, err := tx.Preparex(query)
 	if err != nil {
@@ -32,7 +34,7 @@ func (i *Importer) CreateImporterWithTransaction(tx *sqlx.Tx) (*sqlx.Row, error)
 		return nil, err
 	}
 
-	row := stmt.QueryRowx(i.ImporterName, i.ImporterAddress, i.ImporterPhone, i.ImporterCell, i.ImporterFax, i.ImporterEmail)
+	row := stmt.QueryRow(i.ImporterName, i.ImporterAddress, i.ImporterPhone, i.ImporterCell, i.ImporterFax, i.ImporterEmail)
 
 	return row, err
 

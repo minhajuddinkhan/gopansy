@@ -8,7 +8,7 @@ import (
 //Applicant Applicant
 type Applicant struct {
 	ApplicantID      *string `json:"applicantId"`
-	ApplicantName    *string `json:"applicantName" validate:"required"`
+	ApplicantName    *string `json:"applicantName"`
 	ApplicantAddress *string `json:"applicantAddress"`
 	ApplicantPhone   *string `json:"applicantPhone"`
 	ApplicantCell    *string `json:"applicantCell"`
@@ -17,18 +17,12 @@ type Applicant struct {
 //CreateApplicantWithTransaction CreateApplicantWithTransaction
 func (a *Applicant) CreateApplicantWithTransaction(tx *sqlx.Tx) (*sqlx.Row, error) {
 
-	query := `INSERT INTO applicants
-	 ( 
-		 applicantName, applicantAddress, applicantPhone, applicantCell
-	) VALUES 
-	(
-		$1, $2, $3, $4
-	)`
+	query := `INSERT INTO applicants (applicantName, applicantAddress, applicantPhone, applicantCell) VALUES 
+	($1, $2, $3, $4)`
 	stmt, err := tx.Preparex(query)
 	if err != nil {
 		return nil, err
 	}
-	stmt.Close()
 
 	row := stmt.QueryRowx(a.ApplicantName, a.ApplicantAddress, a.ApplicantPhone, a.ApplicantCell)
 	return row, nil
